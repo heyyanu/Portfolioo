@@ -1,10 +1,11 @@
 import React from 'react';
 import ProjectCard from '../components/ProjectCard';
+import { useContent } from '../hooks/useContent';
 
 import fimImage from '../assets/projects/fim-project.jpg';
 import idsIpsImage from '../assets/projects/ids-ips-project.jpg';
 
-const projects = [
+const fallbackProjects = [
     {
         title: "File Integrity Monitor (FIM)",
         description: "A specialized security tool that monitors critical system files for unauthorized changes. It calculates and compares cryptographic hashes to detect potential tampering or malware injections in real-time.",
@@ -33,6 +34,8 @@ const projects = [
 ];
 
 export default function Projects() {
+    const { data: projects } = useContent('projects', fallbackProjects);
+
     return (
         <section id="projects" className="py-24 bg-background relative">
             <div className="max-w-7xl mx-auto px-6">

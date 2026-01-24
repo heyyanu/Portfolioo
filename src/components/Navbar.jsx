@@ -65,7 +65,7 @@ export default function Navbar() {
                         Expertise
                     </Link>
                     <a
-                        href="#contact"
+                        href="/#contact"
                         className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
                     >
                         Let's Talk

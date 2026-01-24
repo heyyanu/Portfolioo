@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ExternalLink } from 'lucide-react';
+import { useContent } from '../hooks/useContent';
 
-const blogs = [
+const fallbackBlogs = [
     {
         title: "Building an IDS/IPS System with Suricata: A Complete Implementation Guide",
         excerpt: "A comprehensive guide on setting up and configuring Suricata for intrusion detection and prevention, covering installation, rule management, and log analysis.",
@@ -18,6 +19,8 @@ const blogs = [
 ];
 
 export default function Blogs() {
+    const { data: blogs } = useContent('blogs', fallbackBlogs);
+
     return (
         <section id="blogs" className="py-24 bg-muted/20 relative">
             <div className="max-w-7xl mx-auto px-6">

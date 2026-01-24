@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Send, Mail, Twitter, Linkedin, Github } from 'lucide-react';
-import emailjs from '@emailjs/browser';
+
 
 export default function Contact() {
     const form = React.useRef();
@@ -11,20 +11,36 @@ export default function Contact() {
         e.preventDefault();
         setStatus('loading');
 
-        // Replace these with your actual EmailJS credentials
-        // Sign up at https://www.emailjs.com/
-        const SERVICE_ID = 'service_uo4qvq7';
-        const TEMPLATE_ID = 'template_p377sgd';
-        const PUBLIC_KEY = '10bR1w5krVCzYZL7T';
+        const formData = new FormData(form.current);
+        const data = Object.fromEntries(formData.entries());
+        const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
 
-        emailjs.sendForm(SERVICE_ID, TEMPLATE_ID, form.current, PUBLIC_KEY)
-            .then((result) => {
-                console.log(result.text);
-                setStatus('success');
-                e.target.reset();
-                setTimeout(() => setStatus('idle'), 5000);
-            }, (error) => {
-                console.log(error.text);
+        if (!webhookUrl) {
+            console.error("VITE_N8N_WEBHOOK_URL is not defined in .env");
+            setStatus('error');
+            setTimeout(() => setStatus('idle'), 5000);
+            return;
+        }
+
+        fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+            .then((response) => {
+                if (response.ok) {
+                    console.log("Form submitted to n8n");
+                    setStatus('success');
+                    e.target.reset();
+                    setTimeout(() => setStatus('idle'), 5000);
+                } else {
+                    throw new Error('Network response was not ok');
+                }
+            })
+            .catch((error) => {
+                console.error("Error submitting form:", error);
                 setStatus('error');
                 setTimeout(() => setStatus('idle'), 5000);
             });
