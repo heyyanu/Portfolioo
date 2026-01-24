@@ -1,47 +1,41 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Send, Mail, Twitter, Linkedin, Github } from 'lucide-react';
+import emailjs from '@emailjs/browser';
 
 
 export default function Contact() {
     const form = React.useRef();
     const [status, setStatus] = React.useState('idle'); // idle, loading, success, error
+    const [errorMessage, setErrorMessage] = React.useState('');
 
     const sendEmail = (e) => {
         e.preventDefault();
         setStatus('loading');
+        setErrorMessage('');
 
-        const formData = new FormData(form.current);
-        const data = Object.fromEntries(formData.entries());
-        const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
+        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+        const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
-        if (!webhookUrl) {
-            console.error("VITE_N8N_WEBHOOK_URL is not defined in .env");
+        if (!serviceId || !templateId || !publicKey) {
+            console.error("EmailJS credentials are not defined in .env");
             setStatus('error');
+            setErrorMessage("Configuration Error: Missing EmailJS Credentials");
             setTimeout(() => setStatus('idle'), 5000);
             return;
         }
 
-        fetch(webhookUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-        })
-            .then((response) => {
-                if (response.ok) {
-                    console.log("Form submitted to n8n");
-                    setStatus('success');
-                    e.target.reset();
-                    setTimeout(() => setStatus('idle'), 5000);
-                } else {
-                    throw new Error('Network response was not ok');
-                }
-            })
-            .catch((error) => {
-                console.error("Error submitting form:", error);
+        emailjs.sendForm(serviceId, templateId, form.current, publicKey)
+            .then((result) => {
+                console.log(result.text);
+                setStatus('success');
+                e.target.reset();
+                setTimeout(() => setStatus('idle'), 5000);
+            }, (error) => {
+                console.log(error.text);
                 setStatus('error');
+                setErrorMessage("Failed to send: " + error.text);
                 setTimeout(() => setStatus('idle'), 5000);
             });
     };
@@ -128,21 +122,42 @@ export default function Contact() {
                                 />
                             </div>
 
-                            <button
+                            <motion.button
                                 type="submit"
                                 disabled={status === 'loading'}
-                                className={`bg-primary text-primary-foreground font-bold py-4 rounded-lg transition-all flex items-center justify-center gap-2 mt-2 ${status === 'loading' ? 'opacity-70 cursor-not-allowed' : 'hover:bg-primary/90'}`}
+                                className={`w-full bg-primary text-primary-foreground font-bold py-4 rounded-lg transition-all flex items-center justify-center gap-2 mt-2 ${status === 'loading' ? 'opacity-80 cursor-not-allowed' : 'hover:bg-primary/90'}`}
+                                whileTap={status === 'idle' ? { scale: 0.98 } : {}}
                             >
-                                {status === 'loading' ? 'Sending...' : (
-                                    <>Send Message <Send size={18} /></>
-                                )}
-                            </button>
+                                <span className="mr-2">
+                                    {status === 'loading' ? 'Sending...' :
+                                        status === 'success' ? 'Sent!' :
+                                            status === 'error' ? 'Failed' : 'Send Message'}
+                                </span>
+
+                                <motion.div
+                                    animate={
+                                        status === 'loading' ? { x: 50, y: -50, opacity: 0, scale: 0.5 } :
+                                            status === 'error' ? { y: 20, rotate: 135, originX: 0.5, originY: 0.5 } :
+                                                status === 'success' ? { scale: 1.2, rotate: 360 } :
+                                                    { x: 0, y: 0, opacity: 1, scale: 1, rotate: 0 }
+                                    }
+                                    transition={
+                                        status === 'loading' ? { duration: 0.3, ease: "easeInOut" } :
+                                            status === 'error' ? { type: "spring", stiffness: 500, damping: 15 } :
+                                                { duration: 0.3 }
+                                    }
+                                >
+                                    <Send size={18} className={status === 'error' ? 'text-red-200' : ''} />
+                                </motion.div>
+                            </motion.button>
 
                             {status === 'success' && (
                                 <p className="text-green-500 text-sm text-center">Message sent successfully!</p>
                             )}
                             {status === 'error' && (
-                                <p className="text-red-500 text-sm text-center">Failed to send message. Please try again.</p>
+                                <p className="text-red-500 text-sm text-center">
+                                    {errorMessage || "Failed to send message. Please ensure the n8n workflow is Active."}
+                                </p>
                             )}
                         </form>
                     </motion.div>

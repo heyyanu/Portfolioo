@@ -10,6 +10,7 @@ import Contact from './sections/Contact'
 import Footer from './sections/Footer'
 import ScrollManager from './components/ScrollManager'
 import ScrollProgress from './components/ScrollProgress'
+import CyberBackground from './components/CyberBackground'
 
 function Home() {
   return (
@@ -26,7 +27,8 @@ function Home() {
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-white overflow-x-hidden">
+      <div className="min-h-screen text-foreground selection:bg-primary selection:text-white overflow-x-hidden">
+        <CyberBackground />
         <ScrollManager />
         <ScrollProgress />
         <Navbar />
